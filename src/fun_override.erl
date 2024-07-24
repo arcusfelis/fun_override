@@ -2,6 +2,8 @@
 
 -export([call_function/5]).
 
+-include_lib("fun_override/include/fun_override_prod.hrl").
+
 %% We do not include any unsafe functions into the production release
 -export([expect/4, mock/4, unmock/3, unload/1]).
 
@@ -34,10 +36,12 @@ unmock(M, FN, A) ->
 assert_mockable(Mod, FN, A) ->
     FAs = fas(Mod),
     FA = {FN, A},
-    case lists:member(FA, FAs) of
-        true ->
+    case {lists:member(FA, FAs), ?IS_FUN_OVERRIDE_ENABLED_FOR_MODULE(Mod)} of
+        {true, true} ->
             ok;
-        false ->
+        {_, false} ->
+            error({module_not_compiled_with_fun_override, Mod});
+        {false, _} ->
             error({assert_mockable_failed, #{mfa => {Mod, FN, A}, mockable_functions => FAs}})
     end.
 
@@ -52,4 +56,3 @@ fas(Mod) ->
 
 fa_to_mfa(Mod, {FN, A}) ->
     {Mod, FN, A}.
-

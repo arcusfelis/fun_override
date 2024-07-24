@@ -80,4 +80,10 @@ mock_unmock_test() ->
     fun_override:unmock(?MODULE, call_me, 2),
     4 = ?MODULE:call_me(1, 3).
 
+fun_override_not_compiled_test() ->
+    ?assertError(
+        {module_not_compiled_with_fun_override, fun_override_not_compiled},
+        fun_override:mock(fun_override_not_compiled, some_fun, 0, #{f => fun(#{}) -> ok end})
+    ).
+
 -endif.
