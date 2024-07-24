@@ -21,8 +21,8 @@ It uses a `parse_transform` which could be enabled by including:
 
 ```erlang
 {profiles, [
-             {test,    [{erl_opts, [{d, 'FUN_OVERRIDE_ENABLED', true}]}]}
-            ]}.
+    {test, [{erl_opts, [{d, 'FUN_OVERRIDE_ENABLED', true}]}]}
+]}.
 ```
 
 

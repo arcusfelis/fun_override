@@ -17,7 +17,7 @@ assert_disabled_modules(Mods) ->
     case Enabled of
         [] ->
             ok;
-        [_|_] ->
+        [_ | _] ->
             error_logger:error_msg("fun_override is enabled for modules ~p", [Enabled]),
             error({fun_override_assert_disabled_failed, Enabled})
     end.
@@ -76,7 +76,10 @@ call_function(Module, FunName, Arity, OrigFun, Args) ->
 parse_transform(Forms, _Options) ->
     Attrs = [Form || Form <- Forms, get_attr_name(Form) =:= fun_override],
     Args = [erl_syntax:attribute_arguments(Attr) || Attr <- Attrs],
-    [{module, Module}|_] = [erl_syntax_lib:analyze_attribute(Form) || Form <- Forms, get_attr_name(Form) =:= module],
+    [{module, Module} | _] = [
+        erl_syntax_lib:analyze_attribute(Form)
+     || Form <- Forms, get_attr_name(Form) =:= module
+    ],
     FAs = lists:append([fun_override_attr_to_fa(Arg) || Arg <- Args]),
     case FAs of
         [] ->
@@ -99,7 +102,7 @@ get_attr_name(Form) ->
             error
     end.
 
-fun_override_attr_to_fa([Form|_]) ->
+fun_override_attr_to_fa([Form | _]) ->
     case erl_syntax:type(Form) of
         list ->
             % -fun_override([my_fun/2, other_fun/4])
@@ -155,9 +158,17 @@ rewrite_function(Form, {AtomName, Arity}, Module) ->
 make_proxy_fun(AtomName, AtomName2, Arity, Module) ->
     Fun = erl_syntax:implicit_fun(none, erl_syntax:atom(AtomName2), erl_syntax:integer(Arity)),
     Args = nth_variables(Arity),
-    CallArgs = [erl_syntax:atom(Module), erl_syntax:atom(AtomName), erl_syntax:integer(Arity), Fun, erl_syntax:list(Args)],
-    Call = erl_syntax:application(erl_syntax:atom(?MODULE), erl_syntax:atom(call_function), CallArgs),
-%   Body = [erl_syntax:application(erl_syntax:atom(AtomName2), Args)],
+    CallArgs = [
+        erl_syntax:atom(Module),
+        erl_syntax:atom(AtomName),
+        erl_syntax:integer(Arity),
+        Fun,
+        erl_syntax:list(Args)
+    ],
+    Call = erl_syntax:application(
+        erl_syntax:atom(?MODULE), erl_syntax:atom(call_function), CallArgs
+    ),
+    %   Body = [erl_syntax:application(erl_syntax:atom(AtomName2), Args)],
     Body = [Call],
     Clause = erl_syntax:clause(Args, [], Body),
     erl_syntax:function(erl_syntax:atom(AtomName), [Clause]).

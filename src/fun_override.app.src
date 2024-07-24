@@ -1,7 +1,6 @@
-{application, fun_override,
- [
-  {description, ""},
-  {vsn, git},
-  {registered, []},
-  {env, []}
- ]}.
+{application, fun_override, [
+    {description, ""},
+    {vsn, git},
+    {registered, []},
+    {env, []}
+]}.

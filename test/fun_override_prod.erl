@@ -5,7 +5,7 @@
 
 -fun_override([
     call_me/2
-  ]).
+]).
 
 -export([call_me/2]).
 
