@@ -3,7 +3,11 @@
 -export([assert_disabled/1, assert_disabled_modules/1]).
 -export([call_function/5]).
 
+%% We do not include any unsafe functions into the production release
+-ifdef(FUN_OVERRIDE_ENABLED).
 -export([expect/4, mock/4, unmock/3, unload/1]).
+-endif.
+
 
 %% @doc Run this function before starting your application
 %% in production to ensure there are no modules with fun_override compiled.
@@ -23,6 +27,23 @@ assert_disabled_modules(Mods) ->
 
 is_enabled(Mod) ->
     proplists:get_value(fun_override_enabled, Mod:module_info(attributes)) =:= [ok].
+
+-ifdef(FUN_OVERRIDE_ENABLED).
+call_function(Module, FunName, Arity, OrigFun, Args) ->
+    MFA = {Module, FunName, Arity},
+    case persistent_term:get({fun_override, MFA}, false) of
+        false ->
+            apply(OrigFun, Args);
+        #{f := F} = Meta ->
+            F(#{mfa => MFA, args => Args, orig_fun => OrigFun, meta => Meta})
+    end.
+-else.
+call_function(_Module, _FunName, _Arity, OrigFun, Args) ->
+    apply(OrigFun, Args).
+-endif.
+
+
+-ifdef(FUN_OVERRIDE_ENABLED).
 
 %% @doc Similar API for mock.
 expect(M, FN, A, F) when is_function(F) ->
@@ -63,11 +84,4 @@ fas(Mod) ->
 fa_to_mfa(Mod, {FN, A}) ->
     {Mod, FN, A}.
 
-call_function(Module, FunName, Arity, OrigFun, Args) ->
-    MFA = {Module, FunName, Arity},
-    case persistent_term:get({fun_override, MFA}, false) of
-        false ->
-            apply(OrigFun, Args);
-        #{f := F} = Meta ->
-            F(#{mfa => MFA, args => Args, orig_fun => OrigFun, meta => Meta})
-    end.
+-endif.
