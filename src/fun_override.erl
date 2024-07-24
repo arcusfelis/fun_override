@@ -31,7 +31,8 @@ mock(M, FN, A, Meta) ->
 
 unmock(M, FN, A) ->
     Key = {fun_override, {M, FN, A}},
-    persistent_term:erase(Key).
+    persistent_term:erase(Key),
+    ok.
 
 assert_mockable(Mod, FN, A) ->
     FAs = fas(Mod),
