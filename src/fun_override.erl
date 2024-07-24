@@ -8,7 +8,6 @@
 -export([expect/4, mock/4, unmock/3, unload/1]).
 -endif.
 
-
 %% @doc Run this function before starting your application
 %% in production to ensure there are no modules with fun_override compiled.
 assert_disabled(Application) ->
@@ -41,7 +40,6 @@ call_function(Module, FunName, Arity, OrigFun, Args) ->
 call_function(_Module, _FunName, _Arity, OrigFun, Args) ->
     apply(OrigFun, Args).
 -endif.
-
 
 -ifdef(FUN_OVERRIDE_ENABLED).
 
