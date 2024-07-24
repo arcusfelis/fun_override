@@ -2,7 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--compile({parse_transform, fun_override}).
+-compile({parse_transform, fun_override_parse_transform}).
 -fun_override([
     call_me/2,
     unnamed_args_fun/2

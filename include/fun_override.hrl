@@ -1,4 +1,4 @@
 -ifdef(FUN_OVERRIDE_ENABLED).
--compile({parse_transform, fun_override}).
+-compile({parse_transform, fun_override_parse_transform}).
 -fun_override_enabled(ok).
 -endif.
