@@ -1,4 +1,4 @@
--ifndef(PROD_NODE).
+-ifdef(FUN_OVERRIDE_ENABLED).
 -compile({parse_transform, fun_override}).
 -fun_override_enabled(ok).
 -endif.

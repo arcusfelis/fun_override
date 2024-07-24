@@ -16,12 +16,13 @@ It uses a `parse_transform` which could be enabled by including:
 -include_lib("fun_override/include/fun_override.hrl").
 ```
 
-`PROD_NODE` macro could be set in the rebar.config for production releases:
+`FUN_OVERRIDE_ENABLED` macro should be set in the rebar.config for development releases:
 
 
 ```erlang
-{profiles, [ {prod,    [{relx, [ {dev_mode, false},
-                                 {erl_opts, [{d, 'PROD_NODE'}]} ]},
+{profiles, [
+             {test,    [{erl_opts, [{d, 'FUN_OVERRIDE_ENABLED', true}]}]}
+            ]}.
 ```
 
 

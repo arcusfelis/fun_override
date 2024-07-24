@@ -1,6 +1,6 @@
 -module(fun_override_prod).
 
--define(PROD_NODE, true).
+-undef(FUN_OVERRIDE_ENABLED).
 -include_lib("fun_override/include/fun_override.hrl").
 
 -fun_override([
