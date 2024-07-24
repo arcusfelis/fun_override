@@ -47,7 +47,8 @@ assert_mockable(Mod, FN, A) ->
     end.
 
 unload(Mod) ->
-    [persistent_term:erase({fun_override, MFA}) || MFA <- mfas(Mod)].
+    [persistent_term:erase({fun_override, MFA}) || MFA <- mfas(Mod)],
+    ok.
 
 mfas(Mod) ->
     [fa_to_mfa(Mod, FA) || FA <- fas(Mod)].
