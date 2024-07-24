@@ -68,20 +68,22 @@ call a new function or the original one.
 # Production
 
 In production the `parse_transform` is off.
-You can call `fun_override:assert_disabled(YourApplicationName)` to ensure no modules
+You can call `ASSERT_FUN_OVERRIDE_DISABLED_FOR_APPLICATION(YourApplicationName)` to ensure no modules
 compiled using the `parse_transform` are loaded.
 
 Something like:
 
 ```erlang
 -module(your_application).
+-include_lib("fun_override/include/fun_override_prod.hrl").
 
 start() ->
    case your_env() of
        dev -> ok;
-       prod -> fun_override:assert_disabled(your_application)
+       prod -> ?ASSERT_FUN_OVERRIDE_DISABLED_FOR_APPLICATION(your_application)
    end,
    ...
 ```
 
 If there are any modules compiled with the `parse_transform`, the code would crash.
+You do not need to include `fun_override` into the production release.

@@ -2,6 +2,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 -include_lib("fun_override/include/fun_override.hrl").
+-include_lib("fun_override/include/fun_override_prod.hrl").
 
 -fun_override([
     call_me/2,
@@ -35,12 +36,12 @@ override_test() ->
     ok.
 
 assert_disabled_in_prod_test() ->
-    ok = fun_override:assert_disabled_modules([fun_override_prod]).
+    ?ASSERT_FUN_OVERRIDE_DISABLED_FOR_MODULES([fun_override_prod]).
 
 assert_disabled_in_dev_test() ->
     ?assertError(
         {fun_override_assert_disabled_failed, [fun_override_tests]},
-        fun_override:assert_disabled_modules([?MODULE])
+        ?ASSERT_FUN_OVERRIDE_DISABLED_FOR_MODULES([?MODULE])
     ).
 
 unload_test() ->
