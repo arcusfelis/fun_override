@@ -86,4 +86,16 @@ fun_override_not_compiled_test() ->
         fun_override:mock(fun_override_not_compiled, some_fun, 0, #{f => fun(#{}) -> ok end})
     ).
 
+compile_with_unknown_function_test() ->
+    {ok, _} = file:copy(
+        "test/fun_override_bad_fun_name.dontcompile", "/tmp/fun_override_bad_fun_name.erl"
+    ),
+    error = compile:file("/tmp/fun_override_bad_fun_name").
+
+compile_with_unknown_function_fixed_test() ->
+    {ok, _} = file:copy(
+        "test/fun_override_good_fun_name.dontcompile", "/tmp/fun_override_good_fun_name.erl"
+    ),
+    {ok, _} = compile:file("/tmp/fun_override_good_fun_name").
+
 -endif.

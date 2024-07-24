@@ -14,8 +14,26 @@ parse_transform(Forms, _Options) ->
         [] ->
             Forms;
         _ ->
-            lists:append([rewrite_functions(Form, FAs, Module) || Form <- Forms])
+            FormsAndExtra = lists:append([rewrite_functions(Form, FAs, Module) || Form <- Forms]),
+            Extras = [Info || {extra, Info} <- FormsAndExtra],
+            ReplacedMFs = [MF || {compiled, MF} <- Extras],
+            SortedFAs = lists:sort(FAs),
+            DefDups = SortedFAs -- lists:usort(FAs),
+            UnknownFuns = SortedFAs -- ReplacedMFs,
+            case {DefDups, UnknownFuns} of
+                {[], []} ->
+                    [Form || Form <- FormsAndExtra, not is_extra(Form)];
+                {[_ | _], _} ->
+                    error({fun_override_duplicate_function_definitions, lists:usort(DefDups)});
+                {_, [_ | _]} ->
+                    error({fun_override_unknown_functions, lists:usort(UnknownFuns)})
+            end
     end.
+
+is_extra({extra, _Info}) ->
+    true;
+is_extra(_) ->
+    false.
 
 get_attr_name(Form) ->
     case erl_syntax:type(Form) of
@@ -82,7 +100,11 @@ rewrite_function(Form, {AtomName, Arity}, Module) ->
     Clauses = erl_syntax:function_clauses(Form),
     Overwritten = erl_syntax:function(NameForm2, Clauses),
     NewFun = make_proxy_fun(AtomName, AtomName2, Arity, Module),
-    [erl_syntax:revert(Overwritten), erl_syntax:revert(NewFun)].
+    [
+        erl_syntax:revert(Overwritten),
+        erl_syntax:revert(NewFun),
+        {extra, {compiled, {AtomName, Arity}}}
+    ].
 
 make_proxy_fun(AtomName, AtomName2, Arity, Module) ->
     Fun = erl_syntax:implicit_fun(none, erl_syntax:atom(AtomName2), erl_syntax:integer(Arity)),

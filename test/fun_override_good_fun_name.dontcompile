@@ -1,0 +1,9 @@
+-module(fun_override_good_fun_name).
+-export([my_fun/3]).
+-define(FUN_OVERRIDE_ENABLED, true).
+
+-include_lib("fun_override/include/fun_override.hrl").
+%% Correct arity
+-fun_override([my_fun/3]).
+
+my_fun(_, _, _) -> ok.
