@@ -35,4 +35,36 @@ override_test() ->
     end,
     ok.
 
+assert_disabled_in_prod_test() ->
+   ok = fun_override:assert_disabled_modules([fun_override_prod]).
+
+assert_disabled_in_dev_test() ->
+    ?assertError({fun_override_assert_disabled_failed, [fun_override_tests]},
+                 fun_override:assert_disabled_modules([?MODULE])).
+
+unload_test() ->
+    fun_override:expect(?MODULE, call_me, 2, fun(A, B) -> [A, B] end),
+    [1, 3] = ?MODULE:call_me(1, 3),
+    fun_override:unload(?MODULE),
+    4 = ?MODULE:call_me(1, 3).
+
+expect_reload_test() ->
+    fun_override:expect(?MODULE, call_me, 2, fun(A, B) -> [A, B] end),
+    [1, 3] = ?MODULE:call_me(1, 3),
+    fun_override:unload(?MODULE),
+    fun_override:expect(?MODULE, call_me, 2, x),
+    x = ?MODULE:call_me(1, 3),
+    fun_override:unload(?MODULE),
+    4 = ?MODULE:call_me(1, 3).
+
+mock_unknown_test() ->
+    ?assertError({assert_mockable_failed,
+                            #{mfa := {fun_override_tests, wrong_call_me, 2},
+                              mockable_functions := [_|_]}},
+                 fun_override:expect(?MODULE, wrong_call_me, 2, fun(A, B) -> [A, B] end)),
+    ?assertError({assert_mockable_failed,
+                            #{mfa := {fun_override_tests, wrong_call_me, 2},
+                              mockable_functions := [_|_]}},
+                 fun_override:expect(?MODULE, wrong_call_me, 2, x)).
+
 -endif.

@@ -1,11 +1,18 @@
 -module(fun_override).
 
--export([assert_disabled/1]).
+-export([assert_disabled/1, assert_disabled_modules/1]).
 -export([parse_transform/2]).
 -export([call_function/5]).
 
+-export([expect/4, unload/1]).
+
+%% @doc Run this function before starting your application
+%% in production to ensure there are no modules with fun_override compiled.
 assert_disabled(Application) ->
     {ok, Mods} = application:get_key(Application, modules),
+    assert_disabled_modules(Mods).
+
+assert_disabled_modules(Mods) ->
     Enabled = [Mod || Mod <- Mods, is_enabled(Mod)],
     case Enabled of
         [] ->
@@ -16,7 +23,40 @@ assert_disabled(Application) ->
     end.
 
 is_enabled(Mod) ->
-    proplists:get_value(xx, Mod:module_info(attributes)) =:= [ok].
+    proplists:get_value(fun_override_enabled, Mod:module_info(attributes)) =:= [ok].
+
+expect(M, FN, A, F) when is_function(F) ->
+    assert_mockable(M, FN, A),
+    Key = {fun_override, {M, FN, A}},
+    Meta = #{f => fun(#{args := Args}) -> apply(F, Args) end},
+    persistent_term:put(Key, Meta);
+expect(M, FN, A, V) ->
+    assert_mockable(M, FN, A),
+    Key = {fun_override, {M, FN, A}},
+    Meta = #{f => fun(#{}) -> V end},
+    persistent_term:put(Key, Meta).
+
+assert_mockable(Mod, FN, A) ->
+    FAs = fas(Mod),
+    FA = {FN, A},
+    case lists:member(FA, FAs) of
+        true ->
+            ok;
+        false ->
+            error({assert_mockable_failed, #{mfa => {Mod, FN, A}, mockable_functions => FAs}})
+    end.
+
+unload(Mod) ->
+    [persistent_term:erase({fun_override, MFA}) || MFA <- mfas(Mod)].
+
+mfas(Mod) ->
+    [fa_to_mfa(Mod, FA) || FA <- fas(Mod)].
+
+fas(Mod) ->
+    proplists:get_value(fun_override, Mod:module_info(attributes), []).
+
+fa_to_mfa(Mod, {FN, A}) ->
+    {Mod, FN, A}.
 
 call_function(Module, FunName, Arity, OrigFun, Args) ->
     MFA = {Module, FunName, Arity},
