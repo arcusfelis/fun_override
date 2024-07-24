@@ -51,7 +51,6 @@ unload_test() ->
 expect_reload_test() ->
     fun_override:expect(?MODULE, call_me, 2, fun(A, B) -> [A, B] end),
     [1, 3] = ?MODULE:call_me(1, 3),
-    fun_override:unload(?MODULE),
     fun_override:expect(?MODULE, call_me, 2, x),
     x = ?MODULE:call_me(1, 3),
     fun_override:unload(?MODULE),
@@ -66,5 +65,11 @@ mock_unknown_test() ->
                             #{mfa := {fun_override_tests, wrong_call_me, 2},
                               mockable_functions := [_|_]}},
                  fun_override:expect(?MODULE, wrong_call_me, 2, x)).
+
+mock_unmock_test() ->
+    fun_override:mock(?MODULE, call_me, 2, #{f => fun(#{args := [A, B]}) -> [A, B] end}),
+    [1, 3] = ?MODULE:call_me(1, 3),
+    fun_override:unmock(?MODULE, call_me, 2),
+    4 = ?MODULE:call_me(1, 3).
 
 -endif.

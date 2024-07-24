@@ -4,7 +4,7 @@
 -export([parse_transform/2]).
 -export([call_function/5]).
 
--export([expect/4, unload/1]).
+-export([expect/4, mock/4, unmock/3, unload/1]).
 
 %% @doc Run this function before starting your application
 %% in production to ensure there are no modules with fun_override compiled.
@@ -25,16 +25,22 @@ assert_disabled_modules(Mods) ->
 is_enabled(Mod) ->
     proplists:get_value(fun_override_enabled, Mod:module_info(attributes)) =:= [ok].
 
+%% @doc Similar API for mock.
 expect(M, FN, A, F) when is_function(F) ->
-    assert_mockable(M, FN, A),
-    Key = {fun_override, {M, FN, A}},
     Meta = #{f => fun(#{args := Args}) -> apply(F, Args) end},
-    persistent_term:put(Key, Meta);
+    mock(M, FN, A, Meta);
 expect(M, FN, A, V) ->
+    Meta = #{f => fun(#{}) -> V end},
+    mock(M, FN, A, Meta).
+
+mock(M, FN, A, Meta) ->
     assert_mockable(M, FN, A),
     Key = {fun_override, {M, FN, A}},
-    Meta = #{f => fun(#{}) -> V end},
     persistent_term:put(Key, Meta).
+
+unmock(M, FN, A) ->
+    Key = {fun_override, {M, FN, A}},
+    persistent_term:erase(Key).
 
 assert_mockable(Mod, FN, A) ->
     FAs = fas(Mod),
